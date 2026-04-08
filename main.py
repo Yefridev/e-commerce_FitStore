@@ -8,7 +8,7 @@ app = FastAPI()
 # Modelo
 class CartItem(BaseModel):
     product_id : int
-    quantity: int = Field(gt=0) # Me dice quantity debe ser mayor a 0
+    quantity: int = Field(gt=0) #gt=0 significa que la cantidad debe ser mayor a 0
 
 # Cargar productos desde JSON
 with open("product.json") as file:
@@ -49,7 +49,7 @@ def get_cart(user_id : int):
 def add_to_cart(user_id: int, item: CartItem ): #Item será automaticamnete el JSON que envie el usuario
     product = get_product_by_id(item.product_id)
     if not product:
-        raise HTTPException(status_code=404, detail = "Product not found")
+        raise HTTPException(status_code=404, detail = "Producto no encontrado")
     
     
     if user_id not in carts:

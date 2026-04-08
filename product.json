@@ -4,7 +4,7 @@
         "name": "Camiseta Slim",
         "price": 75000,
         "color": "Negro",
-        "talla": "L"
+        "size": "L"
     },
 
     {
@@ -12,6 +12,6 @@
         "name": "Camiseta Oversize",
         "price": 90000,
         "color": "Gris",
-        "talla": "M"
+        "size": "M"
     }
 ]
