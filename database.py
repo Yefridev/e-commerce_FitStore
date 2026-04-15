@@ -1,17 +1,18 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker 
+import mysql.connector
 
-# URL de conexion a MYSQL
-DATABASE_URL = "mysql+pymsql://root:@localhost:3306/ecommerce_db"
+def get_connection():
+    try: 
+        conexion = mysql.connector.connect(
+            host="192.168.1.12",
+            port=3306,
+            user="root",
+            password="",
+            database="ecommerce_db",
+        )
+        if (conexion.is_connected()):
+            print("Conexión exitosa a la base de datos")
+            return conexion
 
-# crear conexion a la base de datos
-engine = create_engine(DATABASE_URL, echo=True)
-
-# crear sesiones para interactuar con la base de datos
-SessionLocal = sessionmaker(autocommit=False,
-                            autoflush=False, 
-                            bind=engine
-                            )
-# Base para los modelos de la base de datos
-Base = declarative_base() 
+    except mysql.connector.Error as e:
+        print(f"Error al conectar a la base de datos: {e}")
+        
