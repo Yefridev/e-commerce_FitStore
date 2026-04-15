@@ -22,7 +22,8 @@ def product_exists(product_id : int):
     return result is not None
     
 
-# Modelo
+# Modelos
+#=========================================
 class CartItem(BaseModel):
     product_id : int
     quantity: int = Field(gt=0) #gt=0 significa que la cantidad debe ser mayor a 0
@@ -30,8 +31,59 @@ class CartItem(BaseModel):
 # Carrito de compras en memoria (simulación)
 carts: dict [int, list[CartItem]] = {}
 
+# Modelo para crear usuario
+class UserCreate(BaseModel):
+    nombre: str
+    email: str
+    password: str
+
+# Modelo para login de usuario
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
 #=========================================
-#       PRODUCTOS  
+#               USUARIOS  
+#=========================================
+
+# Registrar usuario
+#--------------------------------
+@app.post("/users/")
+def register_user(user: UserCreate):
+
+    conexion = get_connection()
+    cursor = conexion.cursor()
+
+    # Verifica existencia de email
+    cursor.execute("SELECT id FROM usuarios WHERE email = %s", (user.email,))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.close()
+        conexion.close()
+        raise HTTPException (status_code=400, detail = "El usuario ya existe")
+    
+    sql = """
+    INSERT INTO usuarios (nombre, email, password)
+    VALUES (%s, %s, %s)
+    """
+    cursor.execute(sql, (user.nombre, user.email, user.password ))
+    conexion.commit()
+
+    cursor.close()
+    conexion.close()
+
+    return {"message": "Usuario conectado correctamente"}
+
+# Cargar un usuario
+#--------------------------------
+
+
+
+
+
+#=========================================
+#               PRODUCTOS  
 #=========================================
 
 # Obtener todos los productos
@@ -67,7 +119,7 @@ def get_product(product_id : int):
         raise HTTPException(status_code=404, detail = "Producto no encontrado")
     return product
 
-# Agregar nuevo producto✅
+# Agregar nuevo producto
 #--------------------------------
 @app.post("/products/")
 def add_product(
@@ -90,7 +142,7 @@ def add_product(
     cursor.close()
     conexion.close()
 
-    return {"message":"Producto creado correctamente"}
+    return {"message":"Producto creado correctamente."}
 
 # Actualizar producto 
 #--------------------------------
@@ -111,7 +163,7 @@ def update_product(product_id: int, nombre: str, precio: float):
 
     return{"message":"Producto actualizado"}
 
-#Eliminar Producto✅
+#Eliminar Producto
 @app.delete("/products/{product_id}")
 def delete_product(product_id: int):
     if not product_exists(product_id):
@@ -129,9 +181,8 @@ def delete_product(product_id: int):
     return{"message": "Producto eliminado"}
 
 
-
 #=========================================
-#---------- CARRITO ----------
+#               CARRITO
 #=========================================
 
 # Ver carrito
