@@ -22,7 +22,8 @@ def product_exists(product_id : int):
     return result is not None
     
 
-# Modelos
+#=========================================
+#               MODELOS
 #=========================================
 class CartItem(BaseModel):
     product_id : int
@@ -46,7 +47,7 @@ class UserLogin(BaseModel):
 #               USUARIOS  
 #=========================================
 
-# Registrar usuario
+# Registrar usuario✅
 #--------------------------------
 @app.post("/users/")
 def register_user(user: UserCreate):
@@ -77,8 +78,30 @@ def register_user(user: UserCreate):
 
 # Cargar un usuario
 #--------------------------------
+@app.post("/user/login")
+def login_user(user: UserLogin):
 
+    conexion = get_connection()
+    cursor = conexion.cursor()
 
+    cursor.execute("SELECT * FROM usuarios WHERE email = %s", (user.email,))
+    db_user = cursor.fetchone()
+
+    cursor.close()
+    conexion.close()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if db_user["password"] != user.password:
+        raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+    
+    return{
+        "message": "Login exitoso",
+        "user_id": db_user["id"],
+        "nombre": db_user["nombre"]
+        }
+        
 
 
 
@@ -86,10 +109,11 @@ def register_user(user: UserCreate):
 #               PRODUCTOS  
 #=========================================
 
-# Obtener todos los productos
+# Obtener todos los productos✅
 #--------------------------------
 @app.get("/products")
 def get_products():
+
     conexion = get_connection()
     cursor = conexion.cursor(dictionary=True)
 
@@ -102,10 +126,11 @@ def get_products():
 
     return products
 
-# Obtener producto por ID
+# Obtener producto por ID✅
 #--------------------------------
 @app.get("/products/{product_id}")
 def get_product(product_id : int):
+
     conexion = get_connection()
     cursor = conexion.cursor(dictionary=True)
 
@@ -119,7 +144,7 @@ def get_product(product_id : int):
         raise HTTPException(status_code=404, detail = "Producto no encontrado")
     return product
 
-# Agregar nuevo producto
+# Agregar nuevo producto✅
 #--------------------------------
 @app.post("/products/")
 def add_product(
@@ -144,7 +169,7 @@ def add_product(
 
     return {"message":"Producto creado correctamente."}
 
-# Actualizar producto 
+# Actualizar producto✅ 
 #--------------------------------
 @app.put("/products/{product_id}")
 def update_product(product_id: int, nombre: str, precio: float):
@@ -162,8 +187,10 @@ def update_product(product_id: int, nombre: str, precio: float):
     conexion.close()
 
     return{"message":"Producto actualizado"}
+'''Falta que se pueda actualizar la cantidad.'''
 
-#Eliminar Producto
+
+#Eliminar Producto✅
 @app.delete("/products/{product_id}")
 def delete_product(product_id: int):
     if not product_exists(product_id):
