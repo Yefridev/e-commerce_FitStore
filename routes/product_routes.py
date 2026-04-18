@@ -11,6 +11,9 @@ router = APIRouter()
 def get_products():
 
     conexion = get_connection()
+    if not conexion:
+        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
+    
     cursor = conexion.cursor(dictionary=True)
 
     sql = "SELECT * FROM productos"
@@ -28,6 +31,9 @@ def get_products():
 def get_product(product_id : int):
 
     conexion = get_connection()
+    if not conexion:
+        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
+    
     cursor = conexion.cursor(dictionary=True)
 
     cursor.execute("SELECT * FROM productos WHERE id = %s", (product_id,))
@@ -44,6 +50,9 @@ def get_product(product_id : int):
 @router.post("/products/")
 def add_product(product: ProductCreate):
     conexion = get_connection()
+    if not conexion:
+        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
+    
     cursor = conexion.cursor()
 
     cursor.execute(
@@ -64,12 +73,37 @@ def update_product(product_id: int, product: ProductUpdate):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
     conexion = get_connection()
+    if not conexion:
+        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
+    
     cursor = conexion.cursor()
 
-    cursor.execute(
-        "UPDATE productos SET nombre = %s, precio = %s, descripcion = %s, stock = %s, imagen = %s WHERE id = %s",
-        (product.nombre, product.precio, product.descripcion, product.stock, product.imagen, product_id)
-    )
+    updates = []
+    values = []
+    
+    if product.nombre is not None:
+        updates.append("nombre = %s")
+        values.append(product.nombre)
+    if product.precio is not None:
+        updates.append("precio = %s")
+        values.append(product.precio)
+    if product.descripcion is not None:
+        updates.append("descripcion = %s")
+        values.append(product.descripcion)
+    if product.stock is not None:
+        updates.append("stock = %s")
+        values.append(product.stock)
+    if product.imagen is not None:
+        updates.append("imagen = %s")
+        values.append(product.imagen)
+    
+    if not updates:
+        raise HTTPException(status_code=400, detail="No hay campos para actualizar")
+    
+    values.append(product_id)
+    
+    sql = f"UPDATE productos SET {', '.join(updates)} WHERE id = %s"
+    cursor.execute(sql, tuple(values))
     conexion.commit()
 
     cursor.close()
@@ -84,6 +118,9 @@ def delete_product(product_id: int):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
     conexion = get_connection()
+    if not conexion:
+        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
+    
     cursor = conexion.cursor()
 
     cursor.execute("DELETE FROM productos WHERE id = %s", (product_id,))

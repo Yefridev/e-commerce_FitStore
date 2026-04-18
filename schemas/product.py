@@ -11,8 +11,11 @@ class ProductCreate(BaseModel):
 
 # Modelo para actualizar producto
 class ProductUpdate(BaseModel):
-    nombre: str
-    precio: float
+    nombre: Optional[str] = None
+    precio: Optional[float] = None
+    descripcion: Optional[str] = None
+    stock: Optional[int] = None
+    imagen: Optional[str] = None
 
 # Modelo para respuesta de producto
 class ProductResponse(BaseModel):

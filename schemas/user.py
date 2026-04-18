@@ -1,18 +1,35 @@
 from pydantic import BaseModel, EmailStr
+from typing import Literal, Optional
 
-# Modelo para crear usuario
-class UserCreate(BaseModel):
+
+class UserBase(BaseModel):
     nombre: str
     email: EmailStr
+
+# Modelo para crear usuario
+class UserCreate(UserBase):
     password: str
+    rol: Literal["admin", "cliente"] = "cliente"
 
 # Modelo para login de usuario
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 # Modelo para respuesta de usuario
-class userResponse(BaseModel):
+class UserResponse(BaseModel):
     id: int
-    nombre: str
-    email: EmailStr
+    rol: str
+
+    class Config:
+        from_attributes = True
+
+# Token (respuesta del login)
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+# Datos dentro del token (opcional pero pro)
+class TokenData(BaseModel):
+    user_id: Optional[int] = None
