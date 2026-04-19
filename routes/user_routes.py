@@ -12,34 +12,37 @@ router = APIRouter()
 @router.post("/users/", response_model=dict)
 def register_user(user: UserCreate):
 
-    if len(user.password.encode('utf-8')) > 72:
-        raise HTTPException(status_code=400, detail="La contraseña es muy larga (máximo 72 caracteres)")
-    
     conexion = get_connection()
     if not conexion:
         raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
     
-    cursor = conexion.cursor()
+    try:
+        cursor = conexion.cursor()
 
-    cursor.execute("SELECT id FROM usuarios WHERE email = %s", (user.email,))
-    if cursor.fetchone():
-        cursor.close()
-        conexion.close()
-        raise HTTPException (status_code=400, detail = "El usuario ya existe")
-    
-    hashed_password = hash_password(user.password)
+        #Validar Email unico
+        cursor.execute("SELECT id FROM usuarios WHERE email = %s", (user.email,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="El usuario ya existe")
 
-    cursor.execute(
-        "INSERT INTO usuarios (nombre, email, password, rol) VALUES (%s, %s, %s, %s)", 
-        (user.nombre, user.email, hashed_password, user.rol)
+        #hash password
+        hashed = hash_password(user.password)
+
+        cursor.execute(
+            "INSERT INTO usuarios (nombre, email, password, rol) VALUES (%s, %s, %s, %s)", 
+            (user.nombre, user.email,hashed, "cliente")
         )
-    conexion.commit()
 
-    cursor.close()
-    conexion.close()
+        conexion.commit()
 
-    return {"message": "Usuario registrado correctamente"}
+    except Exception as e:
+        print("ERROR:",e)
+        conexion.rollback()
+        raise HTTPException(status_code=400, detail = "Error en registro")
 
+    finally:
+        conexion.close()
+
+    return{"message": "Usuario registrado correctamente"}
 
 # Cargar un usuario
 #--------------------------------
@@ -49,27 +52,33 @@ def login_user(user: UserLogin):
     conexion = get_connection()
     if not conexion:
         raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
-    
-    cursor = conexion.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM usuarios WHERE email = %s", (user.email,))
-    db_user = cursor.fetchone()
+    try:
+        cursor = conexion.cursor(dictionary=True)
 
-    cursor.close()
-    conexion.close()
+        cursor.execute("SELECT * FROM usuarios WHERE email = %s", (user.email,))
+        db_user = cursor.fetchone()
 
-    if not db_user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
-    if not verify_password(user.password, db_user["password"]):
-        raise HTTPException(status_code=401, detail="Contraseña incorrecta")
-    
-    token = create_access_token({"user_id": db_user["id"]})
-    
-    return{
+        cursor.close()
+
+        if not db_user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        if not verify_password(user.password, db_user["password"]):
+            raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+
+        token = create_access_token({"user_id": db_user["id"]})
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error en login: {str(e)}")
+    finally:
+        if conexion:
+            conexion.close()
+
+    return {
         "access_token": token,
         "token_type": "bearer"
-        }
+    }
 
 # Obtener datos del usuario autenticado    
 @router.get("/users/me", response_model=UserResponse)
