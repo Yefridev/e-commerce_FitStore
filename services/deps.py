@@ -1,3 +1,4 @@
+import psycopg2.extras
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 from jose import jwt, JWTError
@@ -23,8 +24,9 @@ def get_current_user(token: str = Depends(security)):
         raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
 
     cursor = None
+
     try:
-        cursor = conexion.cursor(dictionary=True)
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SELECT * FROM usuarios WHERE id = %s", (user_id,))
         user = cursor.fetchone()
     finally:

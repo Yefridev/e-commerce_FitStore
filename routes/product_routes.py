@@ -7,7 +7,7 @@ router = APIRouter()
 
 # Obtener todos los productos✅
 #--------------------------------
-@router.get("/products")
+@router.get("/products", tags=["Productos"])
 def get_products():
 
     conexion = get_connection()
@@ -27,7 +27,7 @@ def get_products():
 
 # Obtener producto por ID✅
 #--------------------------------
-@router.get("/products/{product_id}")
+@router.get("/products/{product_id}", tags=["Productos"])
 def get_product(product_id : int):
 
     conexion = get_connection()
@@ -47,7 +47,7 @@ def get_product(product_id : int):
     return product
 
 # Agregar nuevo producto✅
-@router.post("/products/")
+@router.post("/products/", tags=["Productos"])
 def add_product(product: ProductCreate):
     conexion = get_connection()
     if not conexion:
@@ -67,7 +67,7 @@ def add_product(product: ProductCreate):
     return {"message": "Producto creado correctamente"}
 
 # Actualizar producto✅
-@router.put("/products/{product_id}")
+@router.put("/products/{product_id}", tags=["Productos"])
 def update_product(product_id: int, product: ProductUpdate):
     if not product_exists(product_id):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
@@ -112,7 +112,7 @@ def update_product(product_id: int, product: ProductUpdate):
     return {"message": "Producto actualizado correctamente"}
 
 # Eliminar producto✅
-@router.delete("/products/{product_id}")
+@router.delete("/products/{product_id}", tags=["Productos"])
 def delete_product(product_id: int):
     if not product_exists(product_id):
         raise HTTPException(status_code=404, detail="Producto no encontrado")

@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from fastapi import Depends
+import psycopg2.extras
+from fastapi import APIRouter, HTTPException, Depends
 from database import get_connection
 from schemas.user import UserCreate, UserLogin, Token, UserResponse
 from services.auth import hash_password, verify_password, create_access_token
@@ -9,22 +9,23 @@ router = APIRouter()
 
 # Registrar usuario
 #--------------------------------
-@router.post("/users/", response_model=dict)
+@router.post("/users/", response_model=dict, tags=["Usuarios"])
 def register_user(user: UserCreate):
 
     conexion = get_connection()
+
     if not conexion:
         raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
     
     try:
-        cursor = conexion.cursor()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         #Validar Email unico
         cursor.execute("SELECT id FROM usuarios WHERE email = %s", (user.email,))
         if cursor.fetchone():
             raise HTTPException(status_code=400, detail="El usuario ya existe")
 
-        #hash password
+        #hashed password
         hashed = hash_password(user.password)
 
         cursor.execute(
@@ -34,19 +35,22 @@ def register_user(user: UserCreate):
 
         conexion.commit()
 
+    except HTTPException:
+        raise
     except Exception as e:
         print("ERROR:",e)
         conexion.rollback()
         raise HTTPException(status_code=400, detail = "Error en registro")
 
     finally:
+        cursor.close()
         conexion.close()
 
     return{"message": "Usuario registrado correctamente"}
 
 # Cargar un usuario
 #--------------------------------
-@router.post("/users/login", response_model=Token)
+@router.post("/users/login", response_model=Token, tags=["Usuarios"])
 def login_user(user: UserLogin):
 
     conexion = get_connection()
@@ -54,7 +58,7 @@ def login_user(user: UserLogin):
         raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
 
     try:
-        cursor = conexion.cursor(dictionary=True)
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT * FROM usuarios WHERE email = %s", (user.email,))
         db_user = cursor.fetchone()
@@ -69,19 +73,19 @@ def login_user(user: UserLogin):
 
         token = create_access_token({"user_id": db_user["id"]})
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error en login: {str(e)}")
     finally:
-        if conexion:
-            conexion.close()
+        conexion.close()
 
     return {
-        "access_token": token,
-        "token_type": "bearer"
+        "access_token": token, "token_type": "bearer"
     }
 
 # Obtener datos del usuario autenticado    
-@router.get("/users/me", response_model=UserResponse)
+@router.get("/users/me", response_model=UserResponse,  tags=["Usuarios"])
 def get_me(current_user: dict = Depends(get_current_user)):
     return {
         "id": current_user["id"],
