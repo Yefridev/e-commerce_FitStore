@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from models.cart import carts
 from schemas.cart import CartItemCreate, CartItemResponse
+from services.utils import product_exists
 
 router = APIRouter()
 
