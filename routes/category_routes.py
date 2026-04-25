@@ -34,8 +34,8 @@ def create_categoria(categoria: CategoriaCreate, session: SessionDep, _:Usuario 
         raise HTTPException(status_code=400, detail="La categoría ya existe")
     
     nueva = Categoria(
-        nombre=Categoria.nombre,
-        descripcion=Categoria.descripcion
+        nombre=categoria.nombre,
+        descripcion=categoria.descripcion
     )
 
     session.add(nueva)
