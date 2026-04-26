@@ -1,15 +1,18 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class CategoriaCreate(BaseModel):
+
+class CrearCategoria(BaseModel):
     nombre: str
     descripcion: Optional[str] = None
 
-class CategoriaUpdate(BaseModel):
+
+class ActualizarCategoria(BaseModel):
     nombre: Optional[str]
     descripcion: Optional[str] = None
 
-class CategoriaResponse(BaseModel):
+
+class RespuestaCategoria(BaseModel):
     id: int
     nombre: str
     descripcion: Optional[str] = None

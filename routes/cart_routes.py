@@ -1,44 +1,47 @@
 from fastapi import APIRouter, HTTPException
-from models.cart import carts
-from schemas.cart import CartItemCreate, CartItemResponse
-from services.utils import product_exists
+from models.cart import carritos
+from schemas.cart import ItemCarritoCrear, ItemCarritoRespuesta
+from services.utils import existe_producto
 
 router = APIRouter()
 
-@router.get("/cart/{user_id}")
-def get_cart(user_id: int):
-    return carts.get(user_id, [])
 
-@router.post("/cart/{user_id}")
-def add_to_cart(user_id: int, item: CartItemCreate):
+@router.get("/carrito/{usuario_id}")
+def obtener_carrito(usuario_id: int):
+    return carritos.get(usuario_id, [])
+
+
+@router.post("/carrito/{usuario_id}")
+def agregar_al_carrito(usuario_id: int, item: ItemCarritoCrear):
     
-    if not product_exists(item.product_id):
+    if not existe_producto(item.producto_id):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
-    if user_id not in carts:
-        carts[user_id] = []
+    if usuario_id not in carritos:
+        carritos[usuario_id] = []
     
-    for i, cart_item in enumerate(carts[user_id]):
-        if cart_item.product_id == item.product_id:
-            carts[user_id][i] = CartItemCreate(
-                product_id=cart_item.product_id,
-                quantity=cart_item.quantity + item.quantity
+    for i, item_carrito in enumerate(carritos[usuario_id]):
+        if item_carrito.producto_id == item.producto_id:
+            carritos[usuario_id][i] = ItemCarritoCrear(
+                producto_id=item_carrito.producto_id,
+                cantidad=item_carrito.cantidad + item.cantidad
             )
             break
     else:
-        carts[user_id].append(item)
+        carritos[usuario_id].append(item)
     
     return {"message": "Producto agregado al carrito"}
 
-@router.delete("/cart/{user_id}")
-def remove_from_cart(user_id: int, product_id: int):
-    if user_id not in carts:
+
+@router.delete("/carrito/{usuario_id}")
+def eliminar_del_carrito(usuario_id: int, producto_id: int):
+    if usuario_id not in carritos:
         raise HTTPException(status_code=404, detail="Carrito no encontrado")
     
-    original_len = len(carts[user_id])
-    carts[user_id] = [i for i in carts[user_id] if i.product_id != product_id]
+    longitud_original = len(carritos[usuario_id])
+    carritos[usuario_id] = [i for i in carritos[usuario_id] if i.producto_id != producto_id]
 
-    if len(carts[user_id]) == original_len:
+    if len(carritos[usuario_id]) == longitud_original:
         raise HTTPException(status_code=404, detail="Producto no encontrado en el carrito")
     
     return {"message": "Producto eliminado del carrito"}

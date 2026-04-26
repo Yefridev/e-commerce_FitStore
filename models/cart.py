@@ -1,5 +1,5 @@
 from typing import List, Dict
-from schemas.cart import CartItemCreate
+from schemas.cart import ItemCarritoCrear
 
-# Carrito de compras en memoria
-carts: Dict[int, List[CartItemCreate]] = {}
+
+carritos: Dict[int, List[ItemCarritoCrear]] = {}
