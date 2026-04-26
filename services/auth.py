@@ -4,19 +4,19 @@ from datetime import datetime, timedelta
 from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")# Incriptar la contraseña
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# hash de la contraseña
-def hash_password(password: str):
+
+def crear_hash_password(password: str):
     return pwd_context.hash(password)
 
-# Verificar contraseña
-def verify_password(plain, hashed):
-    return pwd_context.verify(plain, hashed)
+
+def verificar_password(texto_plano, hashed):
+    return pwd_context.verify(texto_plano, hashed)
     
-# Crear un token
-def create_access_token(data: dict):
-    to_encode = data.copy()
+
+def crear_token_acceso(datos: dict):
+    to_encode = datos.copy()
 
     expire = datetime.utcnow()+ timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update ({"exp": expire})

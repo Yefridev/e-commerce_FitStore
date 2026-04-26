@@ -1,11 +1,11 @@
 from pydantic import BaseModel, Field
 
-# Modelos para carrito de compras
-class CartItemCreate(BaseModel):
-    product_id: int
-    quantity: int = Field(gt=0)
 
-# Modelo para respuesta de carrito de compras
-class CartItemResponse(BaseModel):
-    product_id: int
-    quantity: int
+class ItemCarritoCrear(BaseModel):
+    producto_id: int
+    cantidad: int = Field(gt=0)
+
+
+class ItemCarritoRespuesta(BaseModel):
+    producto_id: int
+    cantidad: int

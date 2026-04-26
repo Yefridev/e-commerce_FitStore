@@ -3,39 +3,37 @@ from sqlmodel import select
 from database import SessionDep
 from models.category import Categoria
 from models.user import Usuario
-from schemas.category import CategoriaCreate, CategoriaResponse, CategoriaUpdate
-from services.deps import require_admin
-
-
+from schemas.category import CrearCategoria, RespuestaCategoria, ActualizarCategoria
+from services.deps import requerir_admin
 
 
 router = APIRouter()
 
-# Ver todas las categorias
-@router.get("/categorias/", response_model=list[CategoriaResponse], tags=["Categorías"])
-def get_categorias(session:SessionDep):
+# Obtener todas las categorías
+@router.get("/categorias/", response_model=list[RespuestaCategoria], tags=["Categorías"])
+def obtener_categorias(session: SessionDep):
     categorias = session.exec(select(Categoria)).all()
     return categorias
 
-# Ver categoria por ID
-@router.get("/categorias/{categoria_id}", response_model=CategoriaResponse, tags = ["Categorías"])
-def get_categoria(categoria_id: int, session: SessionDep):
+# Obtener categoría por ID
+@router.get("/categorias/{categoria_id}", response_model=RespuestaCategoria, tags=["Categorías"])
+def obtener_categoria(categoria_id: int, session: SessionDep):
     categoria = session.get(Categoria, categoria_id)
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
     return categoria
 
-# Crear categoria
-@router.post("/categorias/", response_model=CategoriaResponse, tags=["Categorías"])
-def create_categoria(categoria: CategoriaCreate, session: SessionDep, _:Usuario = Depends(require_admin)):
+# Crear nueva categoría (solo admin puede crear categorías)
+@router.post("/categorias/", response_model=RespuestaCategoria, tags=["Categorías"])
+def crear_categoria(categoria: CrearCategoria, session: SessionDep, _: Usuario = Depends(requerir_admin)):
     existe = session.exec(select(Categoria).where(Categoria.nombre == categoria.nombre)).first()
 
     if existe:
         raise HTTPException(status_code=400, detail="La categoría ya existe")
     
     nueva = Categoria(
-        nombre=Categoria.nombre,
-        descripcion=Categoria.descripcion
+        nombre=categoria.nombre,
+        descripcion=categoria.descripcion
     )
 
     session.add(nueva)
@@ -43,9 +41,9 @@ def create_categoria(categoria: CategoriaCreate, session: SessionDep, _:Usuario 
     session.refresh(nueva)
     return nueva
 
-# Editar categoria (admin)
-@router.put("/categorias/{categoria_id}", response_model=CategoriaResponse, tags=["Categorías"])
-def update_categoria(categoria_id: int, datos: CategoriaUpdate, session: SessionDep, _:Usuario = Depends(require_admin)):
+# Actualizar categoría (solo admin puede actualizar categorías)
+@router.put("/categorias/{categoria_id}", response_model=RespuestaCategoria, tags=["Categorías"])
+def actualizar_categoria(categoria_id: int, datos: ActualizarCategoria, session: SessionDep, _: Usuario = Depends(requerir_admin)):
 
     categoria = session.get(Categoria, categoria_id)
     if not categoria:
@@ -61,9 +59,9 @@ def update_categoria(categoria_id: int, datos: CategoriaUpdate, session: Session
     session.refresh(categoria)
     return categoria
 
-# Eliminar categoría (admin)
-@router.delete("/categorias/{categoria_id}", response_model=dict,tags=["Categorías"] )
-def delete_categoria(categoria_id: int, session: SessionDep, _: Usuario = Depends(require_admin)):
+# Eliminar categoría (solo admin puede eliminar categorías)
+@router.delete("/categorias/{categoria_id}", response_model=dict, tags=["Categorías"])
+def eliminar_categoria(categoria_id: int, session: SessionDep, _: Usuario = Depends(requerir_admin)):
 
     categoria = session.get(Categoria, categoria_id)
 
