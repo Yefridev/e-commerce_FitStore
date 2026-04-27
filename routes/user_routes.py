@@ -46,7 +46,7 @@ def iniciar_sesion(usuario: UsuarioLogin, session: SessionDep):
 
 # Crear un nuevo admin
 @router.post("/usuarios/crear-admin", response_model=dict, tags=["Usuarios"])
-def crear_admin(usuario: UsuarioCrear, session: SessionDep, _: Usuario = Depends(requerir_admin)):
+def crear_admin(usuario: UsuarioCrear, session: SessionDep,_: Usuario = Depends(requerir_admin))
 
     existe = session.exec(select(Usuario).where(Usuario.email == usuario.email)).first()
     if existe:
@@ -76,13 +76,13 @@ def obtener_mi_perfil(usuario_actual: Usuario = Depends(obtener_usuario_actual))
 
 # Eliminar Usuario (solo admin puede eliminar usuarios)
 @router.delete("/usuarios/{usuario_id}", response_model=dict, tags=["Usuarios"])
-def eliminar_usuario(usuario_id:int, session: SessionDep, _:Usuario = Depends[requerir_admin]):
+def eliminar_usuario(usuario_id:int, session: SessionDep, _: Usuario = Depends(requerir_admin)):
 
     usuario = session.get(Usuario, usuario_id)
 
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
-    session.delet(usuario)
+    session.delete(usuario)
     session.commit()
     return {"message": "Usuario eliminado correctamente"}
