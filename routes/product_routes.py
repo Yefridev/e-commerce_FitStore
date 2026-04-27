@@ -1,130 +1,82 @@
-from fastapi import APIRouter, HTTPException
-from database import get_connection
-from services.utils import existe_producto
-from schemas.product import ProductoCrear, ProductoActualizar
+from fastapi import APIRouter, HTTPException, Depends
+from sqlmodel import select
+from database import SessionDep
+from models.product import Producto
+from models.category import Categoria
+from models.user import Usuario
+from schemas.product import ProductoCreate, ProductoUpdate, ProductoResponse
+from services.deps import requerir_admin
+from typing import List
 
 router = APIRouter()
 
-# Obtener todos los productos
-@router.get("/productos", tags=["Productos"])
-def obtener_productos():
-
-    conexion = get_connection()
-    if not conexion:
-        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
-    
-    cursor = conexion.cursor(dictionary=True)
-
-    sql = "SELECT * FROM productos"
-    cursor.execute(sql)
-    productos = cursor.fetchall()
-
-    cursor.close()
-    conexion.close()
-
+# Ver todos los productos — cualquiera puede verlos
+@router.get("/productos/", response_model=List[ProductoResponse], tags=["Productos"])
+def get_productos(session: SessionDep):
+    productos = session.exec(select(Producto)).all()
     return productos
 
-# Obtener producto por ID
-@router.get("/productos/{producto_id}", tags=["Productos"])
-def obtener_producto(producto_id: int):
-
-    conexion = get_connection()
-    if not conexion:
-        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
-    
-    cursor = conexion.cursor(dictionary=True)
-
-    cursor.execute("SELECT * FROM productos WHERE id = %s", (producto_id,))
-    producto = cursor.fetchone()
-
-    cursor.close()
-    conexion.close()    
-
+# Ver un producto por ID
+@router.get("/productos/{producto_id}", response_model=ProductoResponse, tags=["Productos"])
+def get_producto(producto_id: int, session: SessionDep):
+    producto = session.get(Producto, producto_id)
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return producto
 
-# Agregar nuevo producto
-@router.post("/productos/", tags=["Productos"])
-def agregar_producto(producto: ProductoCrear):
-    conexion = get_connection()
-    if not conexion:
-        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
-    
-    cursor = conexion.cursor()
+# Ver productos por categoría — valida que la categoría exista
+@router.get("/productos/categoria/{categoria_id}", response_model=List[ProductoResponse], tags=["Productos"])
+def get_productos_por_categoria(categoria_id: int, session: SessionDep):
+    categoria = session.get(Categoria, categoria_id)
+    if not categoria:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    productos = session.exec(
+        select(Producto).where(Producto.categoria_id == categoria_id)
+    ).all()
+    return productos
 
-    cursor.execute(
-        "INSERT INTO productos (nombre, precio, descripcion, stock, imagen) VALUES (%s, %s, %s, %s, %s)",
-        (producto.nombre, producto.precio, producto.descripcion, producto.stock, producto.imagen)
+# Crear producto — solo admin, valida que la categoría exista
+@router.post("/productos/", response_model=ProductoResponse, status_code=201, tags=["Productos"])
+def create_producto(producto: ProductoCreate, session: SessionDep, _: Usuario = Depends(requerir_admin)):
+    if producto.categoria_id:
+        categoria = session.get(Categoria, producto.categoria_id)
+        if not categoria:
+            raise HTTPException(status_code=404, detail="Categoría no encontrada")
+
+    nuevo = Producto(
+        categoria_id=producto.categoria_id,
+        nombre=producto.nombre,
+        precio=producto.precio,
+        descripcion=producto.descripcion,
+        stock=producto.stock,
+        imagen=producto.imagen
     )
-    conexion.commit()
+    session.add(nuevo)
+    session.commit()
+    session.refresh(nuevo)
+    return nuevo
 
-    cursor.close()
-    conexion.close()
-
-    return {"message": "Producto creado correctamente"}
-
-# Actualizar producto
-@router.put("/productos/{producto_id}", tags=["Productos"])
-def actualizar_producto(producto_id: int, producto: ProductoActualizar):
-    if not existe_producto(producto_id):
+# Actualizar producto — solo admin
+@router.put("/productos/{producto_id}", response_model=ProductoResponse, tags=["Productos"])
+def update_producto(producto_id: int, datos: ProductoUpdate, session: SessionDep, _: Usuario = Depends(requerir_admin)):
+    producto = session.get(Producto, producto_id)
+    if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    
-    conexion = get_connection()
-    if not conexion:
-        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
-    
-    cursor = conexion.cursor()
 
-    actualizaciones = []
-    valores = []
-    
-    if producto.nombre is not None:
-        actualizaciones.append("nombre = %s")
-        valores.append(producto.nombre)
-    if producto.precio is not None:
-        actualizaciones.append("precio = %s")
-        valores.append(producto.precio)
-    if producto.descripcion is not None:
-        actualizaciones.append("descripcion = %s")
-        valores.append(producto.descripcion)
-    if producto.stock is not None:
-        actualizaciones.append("stock = %s")
-        valores.append(producto.stock)
-    if producto.imagen is not None:
-        actualizaciones.append("imagen = %s")
-        valores.append(producto.imagen)
-    
-    if not actualizaciones:
-        raise HTTPException(status_code=400, detail="No hay campos para actualizar")
-    
-    valores.append(producto_id)
-    
-    sql = f"UPDATE productos SET {', '.join(actualizaciones)} WHERE id = %s"
-    cursor.execute(sql, tuple(valores))
-    conexion.commit()
+    for campo, valor in datos.model_dump(exclude_unset=True).items():
+        setattr(producto, campo, valor)
 
-    cursor.close()
-    conexion.close()
+    session.add(producto)
+    session.commit()
+    session.refresh(producto)
+    return producto
 
-    return {"message": "Producto actualizado correctamente"}
-
-# Eliminar producto
+# Eliminar producto — solo admin
 @router.delete("/productos/{producto_id}", tags=["Productos"])
-def eliminar_producto(producto_id: int):
-    if not existe_producto(producto_id):
+def delete_producto(producto_id: int, session: SessionDep, _: Usuario = Depends(requerir_admin)):
+    producto = session.get(Producto, producto_id)
+    if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    conexion = get_connection()
-    if not conexion:
-        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
-    
-    cursor = conexion.cursor()
-
-    cursor.execute("DELETE FROM productos WHERE id = %s", (producto_id,))
-    conexion.commit()
-
-    cursor.close()
-    conexion.close()
-
+    session.delete(producto)
+    session.commit()
     return {"message": "Producto eliminado correctamente"}

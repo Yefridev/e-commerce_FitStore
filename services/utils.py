@@ -1,8 +1,8 @@
-from database import get_connection
+from database import get_session
 
 
 def existe_producto(producto_id: int):
-    conexion = get_connection()
+    conexion = get_session()
     cursor = conexion.cursor()
 
     cursor.execute("SELECT id FROM productos WHERE id = %s", (producto_id,))
