@@ -46,7 +46,7 @@ def iniciar_sesion(usuario: UsuarioLogin, session: SessionDep):
 
 # Crear un nuevo admin
 @router.post("/usuarios/crear-admin", response_model=dict, tags=["Usuarios"])
-def crear_admin(usuario: UsuarioCrear, session: SessionDep,_: Usuario = Depends(requerir_admin))
+def crear_admin(usuario: UsuarioCrear, session: SessionDep, _: Usuario = Depends(requerir_admin)):
 
     existe = session.exec(select(Usuario).where(Usuario.email == usuario.email)).first()
     if existe:
