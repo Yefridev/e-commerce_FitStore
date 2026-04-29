@@ -11,6 +11,7 @@ from routes.cart_routes import router as cart_router
 import models.user
 import models.category
 import models.product
+import models.cart
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
