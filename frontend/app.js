@@ -1,8 +1,58 @@
-// URL base del backend — ajusta el puerto si es diferente
 const API = "http://localhost:8000";
 
 // ─────────────────────────────────────────
-// PRODUCTOS — llama al backend real
+// INICIALIZACIÓN Y ROLES
+// ─────────────────────────────────────────
+function inicializarRoles() {
+    const rol = sessionStorage.getItem("rol");
+    const usuario = sessionStorage.getItem("usuario");
+    const token = sessionStorage.getItem("token");
+
+    // Mostrar usuario en navbar
+    if (usuario && token) {
+        const nav = document.getElementById("userNav");
+        if (nav) nav.textContent = `👤 ${usuario}`;
+        
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) logoutBtn.style.display = "inline";
+    }
+
+    // Mostrar enlaces según rol
+    if (rol === "admin") {
+        // Admin: mostrar panel admin
+        document.querySelectorAll(".admin-only").forEach(el => {
+            el.classList.add("show");
+            el.style.display = "inline-block";
+        });
+        const adminLink = document.getElementById("adminLink");
+        if (adminLink) adminLink.style.display = "inline";
+        const adminBtn = document.getElementById("adminBtn");
+        if (adminBtn) adminBtn.style.display = "inline-block";
+    } else if (rol === "cliente") {
+        // Cliente: mostrar carrito y funciones de compra
+        document.querySelectorAll(".client-only").forEach(el => {
+            el.classList.add("show");
+            el.style.display = "inline-block";
+        });
+        document.querySelectorAll(".client-only.show-block").forEach(el => {
+            el.style.display = "block";
+        });
+    }
+
+    // Logos consistentes
+    setLogoHrefs();
+}
+
+function setLogoHrefs() {
+    const token = sessionStorage.getItem("token");
+    const targetHref = token ? "/static/home.html" : "/static/index.html";
+    document.querySelectorAll("a.logo").forEach(logo => {
+        logo.href = targetHref;
+    });
+}
+
+// ─────────────────────────────────────────
+// PRODUCTOS
 // ─────────────────────────────────────────
 async function cargarProductos() {
     const grid = document.getElementById("productosGrid");
@@ -20,24 +70,24 @@ async function cargarProductos() {
         loading.style.display = "none";
 
         if (productos.length === 0) {
-            grid.innerHTML = "<p>No hay productos disponibles.</p>";
+            grid.innerHTML = "<p style='color:#BFBFBF'>No hay productos disponibles.</p>";
             return;
         }
+
+        const esCliente = sessionStorage.getItem("rol") === "cliente";
 
         grid.innerHTML = productos.map(p => `
             <div class="card">
                 <h3>${p.nombre}</h3>
-                <p style="color:#666; font-size:0.9rem">${p.descripcion || "Sin descripción"}</p>
+                <p style="color:#BFBFBF; font-size:0.9rem">${p.descripcion || "Sin descripción"}</p>
                 <div class="precio">$${p.precio.toLocaleString()}</div>
-                <div class="stock">Stock: ${p.stock} unidades</div>
-                <button class="btn" onclick="agregarAlCarrito(${p.id})">
-                    Agregar al carrito
-                </button>
+                <div class="stock" style="color:#BFBFBF">Stock: ${p.stock} unidades</div>
+                ${esCliente ? `<button class="btn" onclick="agregarAlCarrito(${p.id})">Agregar al carrito</button>` : ''}
             </div>
         `).join("");
 
     } catch (err) {
-        loading.innerHTML = `Error: ${err.message}`;
+        loading.innerHTML = `<span style="color:#FF3B3B">Error: ${err.message}</span>`;
     }
 }
 
@@ -49,17 +99,15 @@ async function cargarCategoriasFiltro() {
         const res = await fetch(`${API}/categorias/`);
         const categorias = await res.json();
 
-        container.innerHTML = `<button class="btn" onclick="filtrarPorCategoria(0)" id="catBtn0" style="background:#e94560; margin-right:0.5rem; margin-bottom:0.5rem">Todos</button>`;
-
+        container.innerHTML = `<button class="btn" onclick="filtrarPorCategoria(0)" id="catBtn0" style="background:#FF3B3B; margin-right:0.5rem; margin-bottom:0.5rem">Todos</button>`;
         categorias.forEach(c => {
             container.innerHTML += `<button class="btn" onclick="filtrarPorCategoria(${c.id})" id="catBtn${c.id}" style="margin-right:0.5rem; margin-bottom:0.5rem">${c.nombre}</button>`;
         });
-
         filtrarPorCategoria(0);
 
     } catch (err) {
         console.error("Error cargando categorías");
-        cargarTodosProductos();
+        cargarProductos();
     }
 }
 
@@ -68,10 +116,9 @@ async function filtrarPorCategoria(categoriaId) {
     const loading = document.getElementById("loading");
     if (!grid) return;
 
-    document.querySelectorAll("[id^='catBtn']").forEach(btn => {
-        btn.style.background = "";
-    });
-    document.getElementById(`catBtn${categoriaId}`).style.background = "#e94560";
+    document.querySelectorAll("[id^='catBtn']").forEach(btn => btn.style.background = "");
+    const activeBtn = document.getElementById(`catBtn${categoriaId}`);
+    if (activeBtn) activeBtn.style.background = "#FF3B3B";
 
     loading.style.display = "block";
     loading.textContent = "Cargando...";
@@ -88,65 +135,51 @@ async function filtrarPorCategoria(categoriaId) {
         }
 
         loading.style.display = "none";
-
         if (productos.length === 0) {
-            grid.innerHTML = "<p>No hay productos en esta categoría.</p>";
+            grid.innerHTML = "<p style='color:#BFBFBF'>No hay productos en esta categoría.</p>";
             return;
         }
+
+        const esCliente = sessionStorage.getItem("rol") === "cliente";
 
         grid.innerHTML = productos.map(p => `
             <div class="card">
                 <h3>${p.nombre}</h3>
-                <p style="color:#666; font-size:0.9rem">${p.descripcion || "Sin descripción"}</p>
+                <p style="color:#BFBFBF; font-size:0.9rem">${p.descripcion || "Sin descripción"}</p>
                 <div class="precio">$${p.precio.toLocaleString()}</div>
-                <div class="stock">Stock: ${p.stock} unidades</div>
-                <button class="btn" onclick="agregarAlCarrito(${p.id})">
-                    Agregar al carrito
-                </button>
+                <div class="stock" style="color:#BFBFBF">Stock: ${p.stock} unidades</div>
+                ${esCliente ? `<button class="btn" onclick="agregarAlCarrito(${p.id})">Agregar al carrito</button>` : ''}
             </div>
         `).join("");
 
     } catch (err) {
-        loading.innerHTML = `Error: ${err.message}`;
+        loading.innerHTML = `<span style="color:#FF3B3B">Error: ${err.message}</span>`;
     }
 }
 
 // ─────────────────────────────────────────
-// REGISTRO — con validación del lado cliente
+// REGISTRO
 // ─────────────────────────────────────────
 async function registrar() {
     const nombre = document.getElementById("nombre").value.trim();
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
-    // Limpiar errores anteriores
     limpiarErrores();
     let valido = true;
 
-    // Validaciones en el cliente (antes de llamar al backend)
-    if (!nombre) {
-        mostrarError("nombre", "errNombre");
-        valido = false;
-    }
-    if (!email || !email.includes("@")) {
-        mostrarError("email", "errEmail");
-        valido = false;
-    }
-    if (password.length < 6) {
-        mostrarError("password", "errPassword");
-        valido = false;
-    }
+    if (!nombre) { mostrarError("nombre", "errNombre"); valido = false; }
+    if (!email || !email.includes("@")) { mostrarError("email", "errEmail"); valido = false; }
+    if (password.length < 6) { mostrarError("password", "errPassword"); valido = false; }
 
-    if (!valido) return; // no llama al backend si hay errores
+    if (!valido) return;
 
     try {
-        // Llamada real al backend — POST /users/
         const res = await fetch(`${API}/usuarios/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ nombre, email, password })
         });
-
         const data = await res.json();
 
         if (!res.ok) {
@@ -155,7 +188,6 @@ async function registrar() {
             return;
         }
 
-        // Éxito
         document.getElementById("alertSuccess").style.display = "block";
         setTimeout(() => mostrarLogin(), 2000);
 
@@ -178,7 +210,6 @@ async function login() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
         });
-
         const data = await res.json();
 
         if (!res.ok) {
@@ -187,56 +218,215 @@ async function login() {
             return;
         }
 
-        // Guarda el token JWT para usarlo en peticiones autenticadas
         sessionStorage.setItem("token", data.access_token);
-        sessionStorage.setItem("usuario", email);
-        sessionStorage.setItem("usuario_id", data.id);
-        sessionStorage.setItem("rol", data.rol);
 
-        // Redirige a productos
-        window.location.href = "/static/productos.html";
+        // Obtener perfil para id y rol
+        const profileRes = await fetch(`${API}/usuarios/mi-perfil`, {
+            headers: { "Authorization": `Bearer ${data.access_token}` }
+        });
+        if (!profileRes.ok) {
+            sessionStorage.clear();
+            throw new Error("Error al obtener perfil");
+        }
+        const profile = await profileRes.json();
+        sessionStorage.setItem("usuario_id", profile.id);
+        sessionStorage.setItem("rol", profile.rol);
+        sessionStorage.setItem("usuario", profile.nombre);
+
+        window.location.href = "/static/home.html";
 
     } catch (err) {
-        document.getElementById("alertLoginError").textContent = "No se pudo conectar al servidor";
+        document.getElementById("alertLoginError").textContent = err.message || "No se pudo conectar al servidor";
         document.getElementById("alertLoginError").style.display = "block";
     }
 }
 
 // ─────────────────────────────────────────
-// CARRITO
+// CARRITO - FUNCIONES PARA CLIENTES
 // ─────────────────────────────────────────
 async function agregarAlCarrito(productoId) {
     const token = sessionStorage.getItem("token");
-
     if (!token) {
         alert("Debes iniciar sesión para agregar al carrito");
         window.location.href = "/";
         return;
     }
 
-    const usuarioId = sessionStorage.getItem("usuario_id");
-    if (!usuarioId) {
-        alert("Error: usuario no identificado");
-        return;
-    }
-
     try {
-        const res = await fetch(`${API}/carrito/${usuarioId}`, {
+        const res = await fetch(`${API}/carrito/`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({ producto_id: productoId, cantidad: 1 })
         });
 
         if (res.ok) {
             alert("Producto agregado al carrito");
+            actualizarCartCount();
         } else {
             const data = await res.json();
             alert(`Error: ${data.detail}`);
         }
     } catch (err) {
         alert("Error de conexión");
+    }
+}
+
+async function verCarrito() {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+        alert("Debes iniciar sesión");
+        window.location.href = "/";
+        return;
+    }
+
+    const container = document.getElementById("carritoContainer");
+    if (!container) return;
+
+    try {
+        const res = await fetch(`${API}/carrito/`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Error al cargar el carrito");
+
+        const carrito = await res.json();
+        renderizarCarrito(carrito, container);
+
+    } catch (err) {
+        container.innerHTML = `<p style="color:#FF3B3B">Error: ${err.message}</p>`;
+    }
+}
+
+function renderizarCarrito(carrito, container) {
+    if (!carrito.items || carrito.items.length === 0) {
+        container.innerHTML = `
+            <div class="carrito-vacio">
+                <h3 style="color:#BFBFBF">Tu carrito está vacío</h3>
+                <a href="/static/productos.html"><button class="btn" style="margin-top:1rem">Ir a Productos</button></a>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="carrito-container">
+            ${carrito.items.map(item => `
+                <div class="carrito-item">
+                    <div class="carrito-item-info">
+                        <h4>${item.nombre}</h4>
+                        <p>Cantidad: ${item.cantidad}</p>
+                    </div>
+                    <div class="carrito-item-precio">$${item.precio.toLocaleString()}</div>
+                    <div class="carrito-item-subtotal">$${item.subtotal.toLocaleString()}</div>
+                    <div>
+                        <button class="btn btn-small btn-secondary" onclick="actualizarItemCarrito(${item.id}, ${item.cantidad - 1})" ${item.cantidad <= 1 ? 'disabled' : ''}>-</button>
+                        <span style="margin: 0 0.5rem; color:#FFFFFF">${item.cantidad}</span>
+                        <button class="btn btn-small btn-secondary" onclick="actualizarItemCarrito(${item.id}, ${item.cantidad + 1})">+</button>
+                        <button class="btn btn-small" style="margin-left:0.5rem; background:#FF3B3B" onclick="eliminarItemCarrito(${item.id})">Eliminar</button>
+                    </div>
+                </div>
+            `).join("")}
+            <div class="carrito-total">
+                Total: $${carrito.total.toLocaleString()}
+            </div>
+            <div style="text-align:right; margin-top:1rem">
+                <button class="btn" style="width:auto" onclick="vaciarCarrito()">Vaciar Carrito</button>
+            </div>
+        </div>
+    `;
+}
+
+async function actualizarItemCarrito(itemId, nuevaCantidad) {
+    if (nuevaCantidad < 1) return;
+
+    const token = sessionStorage.getItem("token");
+    try {
+        const res = await fetch(`${API}/carrito/${itemId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ cantidad: nuevaCantidad })
+        });
+
+        if (res.ok) {
+            verCarrito();
+            actualizarCartCount();
+        } else {
+            const data = await res.json();
+            alert(`Error: ${data.detail}`);
+        }
+    } catch (err) {
+        alert("Error de conexión");
+    }
+}
+
+async function eliminarItemCarrito(itemId) {
+    if (!confirm("¿Eliminar este producto del carrito?")) return;
+
+    const token = sessionStorage.getItem("token");
+    try {
+        const res = await fetch(`${API}/carrito/${itemId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            verCarrito();
+            actualizarCartCount();
+        } else {
+            alert("Error al eliminar producto");
+        }
+    } catch (err) {
+        alert("Error de conexión");
+    }
+}
+
+async function vaciarCarrito() {
+    if (!confirm("¿Vaciar todo el carrito?")) return;
+
+    const token = sessionStorage.getItem("token");
+    try {
+        const res = await fetch(`${API}/carrito/`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            verCarrito();
+            actualizarCartCount();
+        } else {
+            alert("Error al vaciar carrito");
+        }
+    } catch (err) {
+        alert("Error de conexión");
+    }
+}
+
+async function actualizarCartCount() {
+    const token = sessionStorage.getItem("token");
+    if (!token) return;
+
+    try {
+        const res = await fetch(`${API}/carrito/`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            const carrito = await res.json();
+            const count = carrito.items ? carrito.items.reduce((sum, item) => sum + item.cantidad, 0) : 0;
+            const cartCountEl = document.getElementById("cartCount");
+            if (cartCountEl) {
+                cartCountEl.textContent = count;
+                cartCountEl.style.display = count > 0 ? "flex" : "none";
+            }
+        }
+    } catch (err) {
+        console.error("Error actualizando contador de carrito");
     }
 }
 
@@ -273,20 +463,8 @@ function mostrarRegistro() {
     document.getElementById("loginForm").style.display = "none";
 }
 
-// ─────────────────────────────────────────
-// SESIÓN PERSISTENTE
-// ─────────────────────────────────────────
-function verificarSesionActiva() {
-    const token = sessionStorage.getItem("token");
-    if (token) {
-        // Si hay sesión activa en la página de login, ir a home
-        window.location.href = "/static/home.html";
-    }
-}
-
 function guardarSesionPagina() {
     const path = window.location.pathname;
-    // NO guardar index.html como página de sesión
     if (!path.includes("index.html") && path !== "/") {
         sessionStorage.setItem("sesion_pagina", path);
     }
@@ -294,60 +472,68 @@ function guardarSesionPagina() {
 
 function cerrarSesion() {
     if (!confirm("¿Cerrar sesión?")) return;
-
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("usuario");
-    sessionStorage.removeItem("usuario_id");
-    sessionStorage.removeItem("rol");
-    sessionStorage.removeItem("sesion_pagina");
-
+    sessionStorage.clear();
     window.location.href = "/";
 }
 
-function guardarSesionPagina() {
-    sessionStorage.setItem("sesion_pagina", window.location.pathname);
-}
-
-// Mostrar usuario en navbar si está logueado
+// ─────────────────────────────────────────
+// SESIÓN
+// ─────────────────────────────────────────
 const usuario = sessionStorage.getItem("usuario");
 if (usuario) {
-    const nav = document.getElementById("userNav");
-    if (nav) nav.textContent = `👤 ${usuario}`;
-
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) logoutBtn.style.display = "inline";
-
+    inicializarRoles();
     guardarSesionPagina();
+    actualizarCartCount();
 }
 
-// Mostrar enlace Admin si es admin
-const rol = sessionStorage.getItem("rol");
-if (rol === "admin") {
-    const adminLink = document.getElementById("adminLink");
-    if (adminLink) adminLink.style.display = "inline";
-}
-
-// Verificar si hay sesión activa en index.html (página de login)
+// Redirigir si ya hay sesión en login
 if (window.location.pathname === "/" || window.location.pathname === "/static/index.html") {
-verificarSesionActiva();
+    if (sessionStorage.getItem("token")) {
+        window.location.href = "/static/home.html";
+    }
 }
 
-// Cargar productos automáticamente si estamos en productos.html
+// Cargar productos si estamos en productos.html
 if (window.location.pathname.includes("productos.html")) {
     cargarCategoriasFiltro();
 }
 
-// Verificar si es admin para mostrar panel admin
+// Cargar carrito si estamos en carrito.html
+if (window.location.pathname.includes("carrito.html")) {
+    if (!sessionStorage.getItem("token")) {
+        window.location.href = "/";
+    } else {
+        verCarrito();
+    }
+}
+
+// Verificar admin si estamos en admin.html
 if (window.location.pathname.includes("admin.html")) {
     verificarAdmin();
 }
 
-async function crearProducto() {
+// ─────────────────────────────────────────
+// ADMIN FUNCTIONS
+// ─────────────────────────────────────────
+async function verificarAdmin() {
     const token = sessionStorage.getItem("token");
-    if (!token) {
+    const rol = sessionStorage.getItem("rol");
+
+    if (!token || rol !== "admin") {
+        alert("Acceso restringido. Solo administradores.");
         window.location.href = "/";
         return;
     }
+
+    inicializarRoles();
+    await cargarCategoriasAdmin();
+    await cargarCategoriasList();
+    await cargarProductosList();
+}
+
+async function crearProducto() {
+    const token = sessionStorage.getItem("token");
+    if (!token) { window.location.href = "/"; return; }
 
     const nombre = document.getElementById("nombre").value.trim();
     const precio = parseFloat(document.getElementById("precio").value);
@@ -381,10 +567,7 @@ async function crearProducto() {
         }
 
         mostrarAlerta("alertSuccess", "Producto creado exitosamente");
-        setTimeout(() => {
-            cargarProductosList();
-            limpiarFormProducto();
-        }, 1000);
+        setTimeout(() => { cargarProductosList(); limpiarFormProducto(); }, 1000);
     } catch (err) {
         mostrarAlerta("alertError", "Error de conexión");
     }
@@ -392,10 +575,7 @@ async function crearProducto() {
 
 async function crearCategoria() {
     const token = sessionStorage.getItem("token");
-    if (!token) {
-        window.location.href = "/";
-        return;
-    }
+    if (!token) { window.location.href = "/"; return; }
 
     const nombre = document.getElementById("catNombre").value.trim();
     const descripcion = document.getElementById("catDescripcion").value.trim();
@@ -437,19 +617,18 @@ async function cargarCategoriasList() {
     try {
         const res = await fetch(`${API}/categorias/`);
         const categorias = await res.json();
-
         const container = document.getElementById("categoriasList");
         if (!container) return;
 
         if (categorias.length === 0) {
-            container.innerHTML = "<p>No hay categorías.</p>";
+            container.innerHTML = "<p style='color:#BFBFBF'>No hay categorías.</p>";
             return;
         }
 
         container.innerHTML = categorias.map(c => `
-            <div style="padding:0.5rem; border-bottom:1px solid #eee">
-                <strong>${c.nombre}</strong>
-                <span style="color:#888"> - ${c.descripcion || "Sin descripción"}</span>
+            <div style="padding:0.5rem; border-bottom:1px solid #0B0B0B">
+                <strong style="color:#FFFFFF">${c.nombre}</strong>
+                <span style="color:#BFBFBF"> - ${c.descripcion || "Sin descripción"}</span>
             </div>
         `).join("");
     } catch (err) {
@@ -458,27 +637,25 @@ async function cargarCategoriasList() {
 }
 
 async function cargarProductosList() {
-    const token = sessionStorage.getItem("token");
     try {
         const res = await fetch(`${API}/productos/`);
         const productos = await res.json();
-
         const container = document.getElementById("productosList");
         if (!container) return;
 
         if (productos.length === 0) {
-            container.innerHTML = "<p>No hay productos.</p>";
+            container.innerHTML = "<p style='color:#BFBFBF'>No hay productos.</p>";
             return;
         }
 
         container.innerHTML = productos.map(p => `
-            <div style="padding:0.5rem; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center">
+            <div style="padding:0.5rem; border-bottom:1px solid #0B0B0B; display:flex; justify-content:space-between; align-items:center">
                 <div>
-                    <strong>${p.nombre}</strong>
-                    <span style="color:#e94560"> - $${p.precio}</span>
-                    <span style="color:#888"> | Stock: ${p.stock}</span>
+                    <strong style="color:#FFFFFF">${p.nombre}</strong>
+                    <span style="color:#FF3B3B"> - $${p.precio}</span>
+                    <span style="color:#BFBFBF"> | Stock: ${p.stock}</span>
                 </div>
-                <button class="btn" style="padding:0.3rem 0.8rem; font-size:0.8rem" onclick="eliminarProducto(${p.id})">Eliminar</button>
+                <button class="btn btn-small" style="background:#FF3B3B" onclick="eliminarProducto(${p.id})">Eliminar</button>
             </div>
         `).join("");
     } catch (err) {
@@ -493,16 +670,9 @@ async function eliminarProducto(productoId) {
     try {
         const res = await fetch(`${API}/productos/${productoId}`, {
             method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
+            headers: { "Authorization": `Bearer ${token}` }
         });
-
-        if (!res.ok) {
-            alert("Error al eliminar producto");
-            return;
-        }
-
+        if (!res.ok) { alert("Error al eliminar producto"); return; }
         cargarProductosList();
     } catch (err) {
         alert("Error de conexión");
@@ -525,42 +695,17 @@ function limpiarFormProducto() {
     document.getElementById("categoria_id").value = "";
 }
 
-// ─────────────────────────────────────────
-// ADMIN — verificar y cargar datos
-// ─────────────────────────────────────────
-async function verificarAdmin() {
-    const token = sessionStorage.getItem("token");
-    const rol = sessionStorage.getItem("rol");
-
-    if (!token || rol !== "admin") {
-        alert("Acceso restringido. Solo administradores.");
-        window.location.href = "/";
-        return;
-    }
-
-    // Cargar categorías en el select del formulario
-    await cargarCategoriasAdmin();
-    // Cargar listas
-    await cargarCategoriasList();
-    await cargarProductosList();
-}
-
 async function cargarCategoriasAdmin() {
     try {
         const res = await fetch(`${API}/categorias/`);
         const categorias = await res.json();
-
         const select = document.getElementById("categoria_id");
         if (!select) return;
 
-        // Limpiar opciones anteriores y dejar solo "Sin categoría"
         select.innerHTML = `<option value="">Sin categoría</option>`;
-
-        // Agregar cada categoría como opción
         categorias.forEach(c => {
             select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
         });
-
     } catch (err) {
         console.error("Error cargando categorías para el select");
     }

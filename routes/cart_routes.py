@@ -75,7 +75,7 @@ def agregar_al_carrito(item: CarritoItemAgregar, session: SessionDep, usuario_ac
     carrito = obtener_o_crear_carrito(usuario_actual.id, session)
 
     # Si el producto ya está en el carrito
-    item_existente = session.exce(
+    item_existente = session.exec(
         select(CarritoItem).where(
             CarritoItem.carrito_id == carrito.id,
             CarritoItem.producto_id == item.producto_id
@@ -89,8 +89,15 @@ def agregar_al_carrito(item: CarritoItemAgregar, session: SessionDep, usuario_ac
             raise HTTPException(status_code=400, detail= f"Stock insuficiente. Stock disponible: {producto.stock}")
         item_existente.cantidad = nueva_cantidad
         session.add(item_existente)
-
-     # Actualizar fecha del carrito
+    else:
+        nuevo_item = CarritoItem(
+            carrito_id = carrito.id,
+            producto_id = item.producto_id,
+            cantidad = item.cantidad 
+        )
+        session.add(nuevo_item)
+    
+    # Actualizar fecha del carrito
     carrito.updated_at = datetime.now()
     session.add(carrito)
     session.commit()

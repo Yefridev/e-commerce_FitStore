@@ -4,7 +4,7 @@ from typing import Optional
 
 class CarritoItemAgregar(BaseModel):
     producto_id: int
-    cantidad: int = Field(default=1,gt=1)
+    cantidad: int = Field(ge=1)
 
 
 class CarritoItemActualizar(BaseModel):

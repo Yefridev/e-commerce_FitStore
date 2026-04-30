@@ -18,6 +18,8 @@ class UsuarioLogin(BaseModel):
 
 class UsuarioRespuesta(BaseModel):
     id: int
+    nombre: str
+    email: EmailStr
     rol: str
 
     class Config:

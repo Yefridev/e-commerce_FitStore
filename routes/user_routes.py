@@ -40,9 +40,9 @@ def iniciar_sesion(usuario: UsuarioLogin, session: SessionDep):
     if not verificar_password(usuario.password, db_usuario.password):
         raise HTTPException(status_code= 401, detail="Contraseña incorrecta")
     
-    Token = crear_token_acceso({"usuario_id": db_usuario.id})
+    token = crear_token_acceso({"usuario_id": db_usuario.id})
 
-    return{"access_token": Token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer"}
 
 # Crear un nuevo admin
 @router.post("/usuarios/crear-admin", response_model=dict, tags=["Usuarios"])
