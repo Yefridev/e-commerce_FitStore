@@ -6,34 +6,36 @@
 
 body {
     font-family: 'Segoe UI', sans-serif;
-    background: #f0f2f5;
-    color: #333;
+    background: #0B0B0B;
+    color: #FFFFFF;
 }
 
 /* NAVBAR */
 nav {
-    background: #1a1a2e;
+    background: #0B0B0B;
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #2C2C2C;
 }
 
 nav .logo {
-    color: #e94560;
+    color: #FF3B3B;
     font-size: 1.5rem;
     font-weight: bold;
     text-decoration: none;
 }
 
 nav a {
-    color: white;
+    color: #FFFFFF;
     text-decoration: none;
     margin-left: 1.5rem;
     font-size: 0.95rem;
+    transition: color 0.2s;
 }
 
-nav a:hover { color: #e94560; }
+nav a:hover { color: #FF3B3B; }
 
 /* CONTENEDOR */
 .container {
@@ -51,29 +53,30 @@ nav a:hover { color: #e94560; }
 }
 
 .card {
-    background: white;
+    background: #2C2C2C;
     border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     transition: transform 0.2s;
 }
 
 .card:hover { transform: translateY(-4px); }
 
-.card h3 { color: #1a1a2e; margin-bottom: 0.5rem; }
+.card h3 { color: #FFFFFF; margin-bottom: 0.5rem; }
 
 .card .precio {
-    color: #e94560;
+    color: #FF3B3B;
     font-size: 1.3rem;
     font-weight: bold;
     margin: 0.5rem 0;
 }
 
-.card .stock { color: #888; font-size: 0.85rem; }
+.card .stock { color: #BFBFBF; font-size: 0.85rem; }
 
+/* BOTONES */
 .btn {
-    background: #e94560;
-    color: white;
+    background: #FF3B3B;
+    color: #FFFFFF;
     border: none;
     padding: 0.6rem 1.2rem;
     border-radius: 8px;
@@ -84,20 +87,34 @@ nav a:hover { color: #e94560; }
     transition: background 0.2s;
 }
 
-.btn:hover { background: #c73652; }
+.btn:hover { background: #cc2f2f; }
+
+.btn-secondary {
+    background: #2C2C2C;
+    color: #FFFFFF;
+    border: 1px solid #BFBFBF;
+}
+
+.btn-secondary:hover { background: #3C3C3C; }
+
+.btn-small {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    width: auto;
+}
 
 /* FORMULARIO */
 .form-card {
-    background: white;
+    background: #2C2C2C;
     border-radius: 12px;
     padding: 2rem;
     max-width: 450px;
     margin: 2rem auto;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.form-card h2 {
-    color: #1a1a2e;
+.form-card h2, .form-card h3 {
+    color: #FFFFFF;
     margin-bottom: 1.5rem;
     text-align: center;
 }
@@ -111,26 +128,30 @@ nav a:hover { color: #e94560; }
     margin-bottom: 0.4rem;
     font-weight: 600;
     font-size: 0.9rem;
+    color: #BFBFBF;
 }
 
-.form-group input {
+.form-group input, .form-group textarea, .form-group select {
     width: 100%;
     padding: 0.7rem 1rem;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #0B0B0B;
     border-radius: 8px;
     font-size: 0.95rem;
+    background: #0B0B0B;
+    color: #FFFFFF;
     transition: border 0.2s;
 }
 
-.form-group input:focus {
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
     outline: none;
-    border-color: #e94560;
+    border-color: #FF3B3B;
 }
 
-.form-group input.error { border-color: red; }
+.form-group input.error { border-color: #FF3B3B; }
 
+/* ALERTAS */
 .error-msg {
-    color: red;
+    color: #FF3B3B;
     font-size: 0.8rem;
     margin-top: 0.3rem;
     display: none;
@@ -144,19 +165,117 @@ nav a:hover { color: #e94560; }
     text-align: center;
 }
 
-.alert.success { background: #d4edda; color: #155724; }
-.alert.error-alert { background: #f8d7da; color: #721c24; }
+.alert.success { background: #1a3a1a; color: #4caf50; border: 1px solid #4caf50; }
+.alert.error-alert { background: #3a1a1a; color: #ff6b6b; border: 1px solid #ff6b6b; }
 
 /* HERO */
 .hero {
-    background: linear-gradient(135deg, #1a1a2e, #e94560);
-    color: white;
+    background: linear-gradient(135deg, #0B0B0B, #2C2C2C);
+    color: #FFFFFF;
     padding: 4rem 2rem;
     text-align: center;
+    border-bottom: 1px solid #2C2C2C;
 }
 
-.hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
-.hero p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 2rem; }
+.hero h1 { font-size: 2.5rem; margin-bottom: 1rem; color: #FFFFFF; }
+.hero p { font-size: 1.1rem; color: #BFBFBF; margin-bottom: 2rem; }
 .hero .btn { width: auto; padding: 0.8rem 2rem; font-size: 1rem; }
 
-.loading { text-align: center; padding: 2rem; color: #888; }
+.loading { text-align: center; padding: 2rem; color: #BFBFBF; }
+
+/* CATEGORÍAS FILTRO */
+.categorias-filtro {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.categorias-filtro .btn {
+    width: auto;
+    margin-top: 0;
+}
+
+/* CARRITO */
+.carrito-container {
+    background: #2C2C2C;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.carrito-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #0B0B0B;
+}
+
+.carrito-item:last-child { border-bottom: none; }
+
+.carrito-item-info {
+    flex: 1;
+}
+
+.carrito-item-info h4 { color: #FFFFFF; margin-bottom: 0.3rem; }
+
+.carrito-item-info p {
+    color: #BFBFBF;
+    font-size: 0.85rem;
+}
+
+.carrito-item-precio {
+    color: #FF3B3B;
+    font-weight: bold;
+    margin: 0 1rem;
+}
+
+.carrito-item-subtotal {
+    color: #FFFFFF;
+    font-weight: bold;
+    margin: 0 1rem;
+}
+
+.carrito-total {
+    text-align: right;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-top: 2px solid #0B0B0B;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #FF3B3B;
+}
+
+.carrito-vacio {
+    text-align: center;
+    padding: 3rem;
+    color: #BFBFBF;
+}
+
+/* NAV CART ICON */
+.cart-icon {
+    position: relative;
+    display: inline-block;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #FF3B3B;
+    color: #FFFFFF;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ADMIN ONLY / CLIENT ONLY */
+.admin-only { display: none; }
+.client-only { display: none; }
+.show { display: inline-block; }
+.show-block { display: block; }
