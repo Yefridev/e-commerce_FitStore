@@ -9,11 +9,13 @@ from routes.category_routes import router as category_router
 from routes.product_routes import router as product_router
 from routes.cart_routes import router as cart_router
 from routes. address_routes import router as address_router
+from routes.order_routes import router as order_router
 import models.user
 import models.category
 import models.product
 import models.cart
 import models.address
+import models.order
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,6 +39,7 @@ app.include_router(category_router)
 app.include_router(product_router)
 app.include_router(cart_router)
 app.include_router(address_router)
+app.include_router(order_router)
 
 # Servir frontend estático
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
