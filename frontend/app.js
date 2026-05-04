@@ -274,6 +274,8 @@ async function agregarAlCarrito(productoId) {
     }
 }
 
+
+
 async function verCarrito() {
     const token = sessionStorage.getItem("token");
     if (!token) {
@@ -454,13 +456,13 @@ function limpiarErrores() {
 }
 
 function mostrarLogin() {
-    document.querySelector(".form-card").style.display = "none";
+    document.getElementById("registerForm").style.display = "none";
     document.getElementById("loginForm").style.display = "block";
 }
 
 function mostrarRegistro() {
-    document.querySelector(".form-card").style.display = "block";
     document.getElementById("loginForm").style.display = "none";
+    document.getElementById("registerForm").style.display = "block";
 }
 
 function guardarSesionPagina() {

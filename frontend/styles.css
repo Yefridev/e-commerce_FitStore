@@ -10,6 +10,18 @@ body {
     color: #FFFFFF;
 }
 
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    z-index: 9999;
+    animation: slideIn 0.3s ease;
+}
+
 /* NAVBAR */
 nav {
     background: #0B0B0B;
