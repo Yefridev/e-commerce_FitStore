@@ -8,14 +8,15 @@
 </head>
 <body>
 <nav>
-    <a href="/" class="logo">🏋️ FitStore</a>
+    <a href="/static/home.html" class="logo">🏋️ FitStore</a>
     <div>
         <a href="/static/home.html">Inicio</a>
         <a href="/static/productos.html">Productos</a>
-        <a href="/static/carrito.html" class="cart-icon">
+        <a href="/static/carrito.html" class="cart-icon client-only">
             🛒
             <span class="cart-count" id="cartCount" style="display:none">0</span>
         </a>
+        <a href="/static/tarjeta.html">Metodos de pago</a>
         <a href="/static/admin.html" id="adminLink" style="display:none; color:#FF3B3B">Admin</a>
         <span id="userNav" style="color:#FFFFFF; margin-left:1.5rem"></span>
         <button id="logoutBtn" onclick="cerrarSesion()" style="display:none; margin-left:1rem; background:#FF3B3B; color:#FFFFFF; border:none; padding:0.3rem 0.8rem; border-radius:4px; cursor:pointer">Cerrar sesión</button>
