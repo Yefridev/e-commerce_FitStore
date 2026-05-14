@@ -1,5 +1,14 @@
+import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import SQLModel
+from database import engine
 from main import app
+
+@pytest.fixture(autouse=True, scope="session")
+def crear_tablas():
+    SQLModel.metadata.create_all(engine)
+    yield
+    SQLModel.metadata.drop_all(engine)
 
 client = TestClient(app)
 
@@ -11,7 +20,7 @@ def test_registro_usuario():
         "email": "test_ci@email.com",
         "password": "123456"
     })
-    assert response.status_code == 400
+    assert response.status_code == 200
 
 def test_registro_email_duplicado():
     client.post("/usuarios/", json={
