@@ -14,9 +14,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: ecommerce_user
-          POSTGRES_PASSWORD: 161901
-          POSTGRES_DB: ecommerce_db
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
         ports:
           - 5432:5432
         options: >-
@@ -42,10 +42,10 @@ jobs:
 
       - name: Crear .env para CI
         run: |
-          echo "SECRET_KEY=secret_key_ci_test" >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
           echo "ALGORITHM=HS256" >> .env
           echo "ACCESS_TOKEN_EXPIRE_MINUTES=60" >> .env
-          echo "DATABASE_URL=postgresql://ecommerce_user:161901@localhost:5432/ecommerce_db" >> .env
+          echo "DATABASE_URL=postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}" >> .env
 
       - name: Correr tests
         run: pytest tests/ -v
